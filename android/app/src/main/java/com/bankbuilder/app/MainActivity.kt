@@ -183,7 +183,10 @@ private fun BankBuilderApp(store: Store, openBankAuthorization: (Bank) -> Unit) 
     var showMenu by remember { mutableStateOf(false) }
 
     if (!setupComplete) {
-        BankSetupScreen(openBankAuthorization = openBankAuthorization)
+        BankSetupScreen(
+            openBankAuthorization = openBankAuthorization,
+            onSkip = { setupComplete = true }
+        )
         return
     }
 
@@ -239,7 +242,10 @@ private fun BankBuilderApp(store: Store, openBankAuthorization: (Bank) -> Unit) 
 }
 
 @Composable
-private fun BankSetupScreen(openBankAuthorization: (Bank) -> Unit) {
+private fun BankSetupScreen(
+    openBankAuthorization: (Bank) -> Unit,
+    onSkip: () -> Unit
+) {
     var query by remember { mutableStateOf("") }
     val filtered = supportedBanks.filter { it.name.contains(query, ignoreCase = true) || it.shortName.contains(query, ignoreCase = true) }
 
@@ -250,6 +256,14 @@ private fun BankSetupScreen(openBankAuthorization: (Bank) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onSkip) {
+                        Text("Skip")
+                    }
+                }
                 Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = null)
                 Spacer(Modifier.height(12.dp))
                 Text("Connect your bank", style = MaterialTheme.typography.headlineMedium)
