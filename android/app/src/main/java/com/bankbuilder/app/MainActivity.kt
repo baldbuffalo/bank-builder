@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BankBuilderApp(store: Store) {
     var transactions by remember { mutableStateOf(store.load()) }
@@ -63,19 +64,19 @@ private fun BankBuilderApp(store: Store) {
     MaterialTheme {
         Scaffold(
             topBar = { CenterAlignedTopAppBar(title = { Text(if (tab == 0) "Bank Builder" else "Activity") }, actions = {
-                IconButton({ showMenu = true }) { Icon(Icons.Outlined.MoreVert, "More") }
+                IconButton(onClick = { showMenu = true }) { Icon(Icons.Outlined.MoreVert, "More") }
             }) },
             bottomBar = { NavigationBar {
                 NavigationBarItem(tab == 0, { tab = 0 }, { Icon(Icons.Outlined.Home, "Home") }, label = { Text("Home") })
                 NavigationBarItem(tab == 1, { tab = 1 }, { Icon(Icons.Outlined.List, "Activity") }, label = { Text("Activity") })
             } },
-            floatingActionButton = { FloatingActionButton({ showAdd = true }) { Icon(Icons.Outlined.Add, "Add") } }
+            floatingActionButton = { FloatingActionButton(onClick = { showAdd = true }) { Icon(Icons.Outlined.Add, "Add") } }
         ) { padding ->
             if (tab == 0) HomeScreen(balance, income, spent, transactions.take(5), money, padding)
             else ActivityScreen(transactions, money, ::remove, padding)
         }
         if (showAdd) AddTransactionDialog(::add) { showAdd = false }
-        if (showMenu) AlertDialog(onDismissRequest = { showMenu = false }, title = { Text("Bank Builder") }, text = { Text("Your money stays on this device. No bank connection is required.") }, confirmButton = { TextButton({ showMenu = false }) { Text("OK") } })
+        if (showMenu) AlertDialog(onDismissRequest = { showMenu = false }, title = { Text("Bank Builder") }, text = { Text("Your money stays on this device. No bank connection is required.") }, confirmButton = { TextButton(onClick = { showMenu = false }) { Text("OK") } })
     }
 }
 
@@ -92,13 +93,21 @@ private fun BankBuilderApp(store: Store) {
 @Composable private fun ActivityScreen(items: List<Transaction>, money: NumberFormat, remove: (Transaction) -> Unit, padding: PaddingValues) {
     LazyColumn(Modifier.fillMaxSize().padding(padding).padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (items.isEmpty()) item { EmptyState() }
-        items(items, key = { it.id }) { t -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { TransactionRow(t, money, Modifier.weight(1f)); IconButton({ remove(t) }) { Icon(Icons.Outlined.Delete, "Delete") } } }
+        items(items, key = { it.id }) { t -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { TransactionRow(t, money, Modifier.weight(1f)); IconButton(onClick = { remove(t) }) { Icon(Icons.Outlined.Delete, "Delete") } } }
     }
 }
 
 @Composable private fun StatCard(title: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier) { Card(modifier, RoundedCornerShape(18.dp)) { Column(Modifier.padding(16.dp)) { Icon(icon, null); Spacer(Modifier.height(10.dp)); Text(title); Text(value, style = MaterialTheme.typography.titleLarge) } } }
 
-@Composable private fun TransactionRow(t: Transaction, money: NumberFormat, modifier: Modifier = Modifier) { ListItem(modifier, headlineContent = { Text(t.title) }, supportingContent = { Text(if (t.income) "Income" else "Expense") }, leadingContent = { Icon(if (t.income) Icons.Outlined.ArrowDownward else Icons.Outlined.ArrowUpward, null) }, trailingContent = { Text((if (t.income) "+" else "-") + money.format(t.amount)) }) }
+@Composable private fun TransactionRow(t: Transaction, money: NumberFormat, modifier: Modifier = Modifier) {
+    ListItem(
+        modifier = modifier,
+        headlineContent = { Text(t.title) },
+        supportingContent = { Text(if (t.income) "Income" else "Expense") },
+        leadingContent = { Icon(if (t.income) Icons.Outlined.ArrowDownward else Icons.Outlined.ArrowUpward, null) },
+        trailingContent = { Text((if (t.income) "+" else "-") + money.format(t.amount)) }
+    )
+}
 
 @Composable private fun EmptyState() { Card(Modifier.fillMaxWidth(), RoundedCornerShape(18.dp)) { Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Outlined.AccountBalanceWallet, null); Spacer(Modifier.height(8.dp)); Text("No transactions yet", style = MaterialTheme.typography.titleMedium); Text("Tap + to add your first transaction") } } }
 
